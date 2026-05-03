@@ -1,0 +1,49 @@
+//| mill-version: 1.0.6
+//| mill-jvm-version: 21
+//| mvnDeps: ["com.mchange::untemplate-mill:0.3.0"]
+//+---------------------------------------------------------------
+
+package build
+
+import mill.*
+import mill.scalalib.*
+
+import untemplate.mill.*
+
+val UnstaticVersion = "0.4.0"
+
+object Dependency:
+  val Unstatic             = mvn"com.mchange::unstatic:${UnstaticVersion}"
+  val UnstaticZTapir       = mvn"com.mchange::unstatic-ztapir:${UnstaticVersion}"
+
+object `package` extends UntemplateModule:
+  override def scalaVersion = "3.3.7"
+
+  override def untemplateSourcesFolders = super.untemplateSourcesFolders :+ "entries"
+  override def untemplateSourcesPrefixPackagesFromModuleDir : Map[String,String] = Map("entries" -> "my.unstatic.website.entries")
+
+  // we'll build an index!
+  override def untemplateIndexNameFullyQualified : Option[String] = Some("my.unstatic.website.IndexedUntemplates")
+
+  override def untemplateSelectCustomizer: untemplate.Customizer.Selector = key =>
+    var out = untemplate.Customizer.empty
+
+    // to customize, examine key and modify the customer
+    // with out = out.copy=...
+    //
+    // e.g. out = out.copy(extraImports=Seq("draft.*"))
+
+    if key.inferredPackage == "my.unstatic.website.entries" && key.inferredFunctionName.startsWith("entry_") then
+      out = out.copy(extraImports=Seq("unstatic.*","my.unstatic.website","my.unstatic.website.MainSite.MainBlog","unstatic.ztapir.simple.UpdateRecord"))
+
+    out
+
+  override def mvnDeps = Task:
+    super.mvnDeps() ++
+      Seq (
+        Dependency.Unstatic,
+        Dependency.UnstaticZTapir,
+      )
+
+
+

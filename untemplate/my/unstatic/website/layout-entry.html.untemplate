@@ -1,0 +1,146 @@
+import unstatic.PageBase
+import unstatic.ztapir.simple.Attribute.Key
+import unstatic.ztapir.simple.Related
+
+val presentationTypeClass =
+  s"presentation-${input.presentation.toString().toLowerCase}"
+
+val blog = input.blog
+val info = input.info
+val site = input.site
+val resolved = input.sourceEntry
+val ut = resolved.entryUntemplate
+val permalink = resolved.permalink
+val synthetic = ut.UntemplateSynthetic
+val mbAnchor = info.mbAnchor
+val articleClasses = presentationTypeClass + mbAnchor.fold("")(anchor => s" uid-${anchor}") + (if synthetic then " synthetic" else "")
+val titleNameAttributeEndSpace= mbAnchor.fold(" ")(anchor => s"""name="${anchor}" """ )
+val mbTitle  = info.mbTitle
+val authors = info.authors
+val authorsString =
+  authors.size match
+    case 0 => "anonymous"
+    case 1 => authors.head
+    case 2 => authors.mkString(" and ")
+    case sz =>
+      val (init, last) =
+        authors.splitAt(sz-1)
+      init.mkString(", ", ", ", "") + last.head
+val pubDate = Key.`PubDate`.caseInsensitiveCheck(ut).getOrElse( throw new Exception("Attribute PubDate required, not found: " + resolved) )
+val timestamp = blog.dateTimeFormatter.format(pubDate)
+
+val mbPrevPermalinkLoc = input.previousEntry.map( _.permalink )
+val prevTitle = input.previousEntry.flatMap( _.entryInfo.mbTitle ).getOrElse("previous")
+
+val mbNextPermalinkLoc = input.nextEntry.map( _.permalink )
+val nextTitle = input.nextEntry.flatMap( _.entryInfo.mbTitle ).getOrElse("next")
+
+val mbPriorRevisionLoc = blog.priorRevisionSiteRooted(info.asInstanceOf[blog.Entry.Info]).map( site.location ) // compiler fails to track blog == MainBlog
+val mbSproutRssLoc = info.mbSproutInfo.map( si => site.location( si.sproutFeedSiteRooted ) )
+
+val related =
+  Key.Related.caseInsensitiveCheck(ut) match
+    case None      => ""
+    case Some( r ) => Related.defaultRenderSingleOrMulti( site, input.renderLocation.siteRootedPath, Some(input.info.mediaPathSiteRooted), r )
+
+given PageBase = PageBase.fromPage(input.renderLocation)
+
+(input : MainSite.MainBlog.Layout.Input.Entry)[]~()> ### Generated HTML begins below
+      <article class="<(articleClasses)>">
+      <div class="entry-header-body-footer">
+        <div class="entry-header">
+<()
+  if input.presentation != input.blog.Entry.Presentation.Rss then {
+    mbTitle.fold("") { title =>
+()>
+          <h1><a <( titleNameAttributeEndSpace )>href="<( permalink.relative )>"><( title )></a></h1>
+<()
+    }
+  }
+()>
+        </div>
+<()
+  if info.updateHistory.nonEmpty || mbSproutRssLoc.nonEmpty then {
+()>
+   <div class="update-prepend rss-description-exclude">
+     <ul>
+<()
+    info.updateHistory.headOption.foreach { ur =>
+()>
+       <li>
+         This post was meaningfully revised at <( blog.dateTimeFormatter.format(ur.timestamp) )>.
+<()
+      mbPriorRevisionLoc.foreach { priorRevisionLoc =>
+()>
+         The previous revision is <a href="<( priorRevisionLoc.relative )>">here</a>.
+<()
+      }
+()>
+        (See <a href="<( permalink.relative )>#update-history">update history</a>.)
+       </li>
+<()
+    }
+    mbSproutRssLoc.foreach { sproutRssLoc =>
+()>
+  <li>This post is expected to evolve over time. You can subscribe to ongoing updates <a href="<( sproutRssLoc.relative )>">here</a>.
+  <link rel="alternate" type="application/rss+xml" title="Update to <( info.mbTitle.getOrElse("this post") )>" href="<( sproutRssLoc.absolutePath )>"></li>
+<()
+    }
+()>
+     </ul>
+     <hr>
+   </div>
+<()
+  }
+()>
+        <div class="entry-body">
+          <( input.articleContentHtml )>
+        </div>
+        <div class="entry-footer">
+          <div class="post-metainfo">
+<()
+  if synthetic then {
+()>
+            <div class="synthetic-note"><strong>This is an automatically generated post.</strong></div>
+<()
+  }
+()>
+            <a href="<( permalink.relative )>">draft</a> by <b><( authorsString )></b><br/><a href="<( permalink.relative )>"><( timestamp )></a>
+          </div>
+        </div>
+      </div> <!-- entry-header-body-footer -->
+  
+<()
+if input.presentation == input.blog.Entry.Presentation.Single then {
+()>
+        <( related )>
+        <div class="prev-top-next">
+          <div class="prev">
+<()
+  mbPrevPermalinkLoc.foreach { prevLoc =>
+()>
+               &larr; <a href="<( prevLoc.relative )>"><( prevTitle )></a>
+<()
+  } // mbPrevPermalinkLoc
+()>
+          </div>
+          <div class="top">
+              <a href="<( input.blog.frontPage.relative )>">&uarr;&uarr;&uarr;</a>
+          </div>
+          <div class="next">
+<()
+  mbNextPermalinkLoc.foreach { nextLoc =>
+()>
+               <a href="<( nextLoc.relative )>"><( nextTitle )></a> &rarr;
+<()
+  } // mbNextPermalinkLoc
+()>
+
+          </div>
+        </div>
+        <( layout_update_history_html( input ) )>
+<()
+} // if
+()>
+      </article>
+<()

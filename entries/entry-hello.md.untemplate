@@ -1,0 +1,17 @@
+> val uid = "hello" // a unique ID you can use in future posts to refer to this one
+>
+> val UntemplateAttributes = immutable.Map[String,Any] (
+>   "Title"         -> "Hello!",
+>   "Author"        -> "Scrooge McDuck",
+>   "PubDate"       -> "2026-05-03T01:48:48-03:00",
+>   "Anchor"        -> uid
+> )
+
+given PageBase = PageBase.fromPage(input.renderLocation)
+
+(input : MainBlog.EntryInput)[]~()>      ### modify Title/Author/Pubdate above, add markdown or html below!
+
+This is an automatically generated placeholder entry in your new blog.
+You'll probably want to delete it.
+
+But do copy it first, as a template for your first new, real post!

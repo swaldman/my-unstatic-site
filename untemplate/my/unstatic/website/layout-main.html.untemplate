@@ -1,0 +1,95 @@
+import unstatic.PageBase
+import unstatic.ztapir.simple.Attribute.Key.*
+
+given PageBase = PageBase.fromPage(input.renderLocation)
+
+val site = input.renderLocation.site
+val blog = site.MainBlog
+
+val feedLoc = blog.rssFeed
+val cssLoc = site.location("css/style.css")
+val mainLoc = site.location("/index.html")
+val rssImageLoc = site.location("/image/1024px-Feed-icon.svg_.png")
+val archiveLoc = MainSite.MainBlog.Archive.location
+
+val currentSiteRootedPath = input.renderLocation.siteRootedPath
+val onMain    = currentSiteRootedPath == mainLoc.siteRootedPath
+val onArchive = currentSiteRootedPath == archiveLoc.siteRootedPath
+
+val mbAllItemFeedLoc = blog.allItemFeedSiteRooted.map( aifsr => site.location( aifsr ) )
+val allItemFeedLink =
+  mbAllItemFeedLoc.fold("")( aifl =>
+    s"""<link rel="alternate" type="application/x-all-item-rss+xml" title="Getting Started Example - all items" href="${aifl.absolutePath}">"""
+  )
+
+val title =
+  val mbTitle =
+    if input.sourceUntemplates.size == 1 then input.sourceUntemplates.head.checkAttributeKey(`Title`) else None
+  mbTitle.getOrElse("Getting Started Example")
+end title
+
+(input : MainSite.MainLayoutInput)[]~()>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="alternate" type="application/rss+xml" title="Getting Started Example: updates" href="<( feedLoc.relative )>">
+    <( allItemFeedLink )>
+    <( input.singleItemRssSpec.map( _.htmlLinkAlternateRelative(input.renderLocation.siteRootedPath) ).getOrElse("") )>
+    <link rel="stylesheet" href="<( cssLoc.relative )>">
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+          const regex = /(^.*)\-oldcommit\-[0-9A-Fa-f]+\.html/;
+          const match = window.location.pathname.match(regex);
+          if (match) {
+              const b  = document.querySelector("body");
+              const tb = document.getElementById("top-banner");
+              b.classList.add("old-draft");
+              tb.innerHTML = "You are looking at an old, superceded version of this page. For the current version, please <a href=\"" + match[1] + ".html\">click here</a>.";
+          }
+       });
+    </script>
+    <title><( title )></title>
+  </head>
+  <body>
+    <div id="top-banner"></div>
+    <header>
+      <div id="site-title-container">
+        <a id="site-title" href="<( mainLoc.relative )>">Getting Started Example</a>
+      </div>
+      <div id="menu-container">
+<()
+  if onMain then {
+()>
+	<span class="active">main</span> | <a href="<( archiveLoc.relative )>">archive</a>
+<()
+  } else if onArchive then {
+()>
+	<a href="<( mainLoc.relative )>">main</a> | <span class="active">archive</span>
+<()
+  } else {
+()>
+	<a href="<( mainLoc.relative )>">main</a> | <a href="<( archiveLoc.relative )>">archive</a>
+<()
+  }
+()>
+      </div>
+      <div id="rss-link-container">
+        <a id="rss-link" href="<( feedLoc.relative )>"><img id="rss-link-image" border="0" src="<( rssImageLoc.relative )>"></a>
+      </div>
+    </header>
+    <main>
+      <( input.mainContentHtml )>
+    </main>
+    <footer>
+      <div id="left-footer">
+	<b>Getting Started Example</b>
+      </div>
+      <div id="right-footer">
+	<a href="#top-banner">up to top &uarr;</a>
+      </div>
+    </footer>
+  </body>
+</html>

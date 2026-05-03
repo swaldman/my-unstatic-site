@@ -1,0 +1,55 @@
+import java.time.format.DateTimeFormatter
+import unstatic.PageBase
+import unstatic.ztapir.simple.SimpleBlog
+import unstatic.ztapir.simple.Attribute.Key.*
+
+> val MonthFormatter = DateTimeFormatter.ofPattern("yyyy'-'MM").withZone(java.time.ZoneId.systemDefault())
+
+given PageBase = PageBase.fromPage(input.renderLocation)
+
+def notUpdateAnnouncement( er : MainSite.MainBlog.EntryResolved) =
+  SyntheticType.caseInsensitiveCheck( er.entryUntemplate ) != Some(SimpleBlog.SyntheticType.UpdateAnnouncement.toString)
+
+val entryUntemplatesResolvedByMonthStr =
+  val filtered = input.entryUntemplatesResolved.filter( notUpdateAnnouncement )
+  val unsorted =
+    filtered.groupBy( eutr => MonthFormatter.format( eutr.entryUntemplate.checkAttributeKey(`PubDate`).getOrElse( throw new Exception("No PubDate on Entry! " + eutr) ) ) )
+  immutable.SortedMap.from( unsorted )( summon[Ordering[String]].reverse )
+val site = input.renderLocation.site
+
+val zip = site.location("/zip.html")
+
+(input : MainSite.MainBlog.Archive.Input)[]~()>
+<div class="archive">
+  <h1>archive</h1>
+
+  <dl>
+<()  
+  entryUntemplatesResolvedByMonthStr.foreach { case ( ms, eutrs ) =>
+()>
+    <dt><( ms )></dt>
+    <dd>
+      <ul>
+<()
+    eutrs.foreach { eutr =>
+      val permalinkLoc = site.location( eutr.entryInfo.permalinkPathSiteRooted )
+      val title        = eutr.entryInfo.mbTitle.getOrElse("(Untitled Post)")
+      val mbUid        = Anchor.caseInsensitiveCheck(eutr.entryUntemplate)
+
+      val uidComment =
+        mbUid match
+          case Some(uid) => s" <!-- UID: $uid -->"
+          case None      => ""
+      end uidComment
+()>
+        <li><a class="archive-item" href="<( permalinkLoc.relative )>"><( title )></a></li><( uidComment )>
+<()
+    }
+()>
+      </ul>
+    </dd>
+<()
+  }
+()>
+  </dl>
+</div>
