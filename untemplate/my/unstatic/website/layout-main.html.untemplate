@@ -59,6 +59,7 @@ end title
       <div id="site-title-container">
         <a id="site-title" href="<( mainLoc.relative )>">Getting Started Example</a>
       </div>
+      <div id="tagline-container">The Sincerest Form of Flattery</div>
       <div id="menu-container">
 <()
   if onMain then {
@@ -83,13 +84,19 @@ end title
     <main>
       <( input.mainContentHtml )>
     </main>
+<()
+  if input.sourceUntemplates.size != 1 then {
+()>
     <footer>
       <div id="left-footer">
 	<b>Getting Started Example</b>
       </div>
       <div id="right-footer">
-	<a href="#top-banner">up to top &uarr;</a>
+	<a href="#top">up to top &uarr;</a>
       </div>
     </footer>
+<()
+  }
+()>
   </body>
 </html>

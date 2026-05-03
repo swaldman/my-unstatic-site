@@ -28,6 +28,8 @@ val authorsString =
       init.mkString(", ", ", ", "") + last.head
 val pubDate = Key.`PubDate`.caseInsensitiveCheck(ut).getOrElse( throw new Exception("Attribute PubDate required, not found: " + resolved) )
 val timestamp = blog.dateTimeFormatter.format(pubDate)
+val datestamp = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(blog.timeZone).format(pubDate)
+val topDateStamp = java.time.format.DateTimeFormatter.ofPattern("MMM d yyyy").withZone(blog.timeZone).format(pubDate)
 
 val mbPrevPermalinkLoc = input.previousEntry.map( _.permalink )
 val prevTitle = input.previousEntry.flatMap( _.entryInfo.mbTitle ).getOrElse("previous")
@@ -51,6 +53,9 @@ given PageBase = PageBase.fromPage(input.renderLocation)
         <div class="entry-header">
 <()
   if input.presentation != input.blog.Entry.Presentation.Rss then {
+()>
+          <div class="entry-top-date"><( topDateStamp )></div>
+<()
     mbTitle.fold("") { title =>
 ()>
           <h1><a <( titleNameAttributeEndSpace )>href="<( permalink.relative )>"><( title )></a></h1>
@@ -105,7 +110,7 @@ given PageBase = PageBase.fromPage(input.renderLocation)
 <()
   }
 ()>
-            <a href="<( permalink.relative )>">draft</a> by <b><( authorsString )></b><br/><a href="<( permalink.relative )>"><( timestamp )></a>
+            <a href="<( permalink.relative )>">Published by <( authorsString )> on <( datestamp )></a>
           </div>
         </div>
       </div> <!-- entry-header-body-footer -->
