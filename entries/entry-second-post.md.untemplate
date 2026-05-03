@@ -1,0 +1,18 @@
+> val uid = "second-post-with-media" // a unique ID you can use in future posts to refer to this one
+>
+> val UntemplateAttributes = immutable.Map[String,Any] (
+>   "Title"         -> "Second post, with media!",
+>   "Author"        -> "Steve",
+>   "PubDate"       -> "2026-05-02T20:00:00-03:00",
+>   "Anchor"        -> uid
+> )
+
+given PageBase = PageBase.fromPage(input.renderLocation)
+
+(input : MainBlog.EntryInput)[]~()>      ### modify Title/Author/Pubdate above, add markdown or html below!
+
+Montevideo in May is lovely!
+
+![A tree-lined Montevideo street in May 2026](##./IMG_5513.jpeg)
+
+This is our second post. Check out our [first](##first-post).
