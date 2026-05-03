@@ -1,0 +1,20 @@
+> val uid = "first-post" // a unique ID you can use in future posts to refer to this one
+>
+> val UntemplateAttributes = immutable.Map[String,Any] (
+>   "Title"         -> "First post!",
+>   "PubDate"       -> "2026-05-02T17:50:00-03:00",
+>   "Author"        -> "Steve",
+>   "Anchor"        -> uid
+> )
+
+given PageBase = PageBase.fromPage(input.renderLocation)
+
+(input : MainBlog.EntryInput)[]~()>      ### modify Title/Author/Pubdate above, add markdown or html below!
+
+Woo hoo!
+
+This is my first post on my new website.
+
+(It's just an example post on an example website, following the tutorial [here](https://github.com/swaldman/ghpages-unstatic-template).)
+
+Thank you for reading!
